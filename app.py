@@ -5,9 +5,7 @@ import re
 import numpy as np
 from scipy.sparse import hstack
 
-# --------------------------------
-# Page config
-# --------------------------------
+
 st.markdown(
     """
     <h2 style='text-align: center;'>
@@ -17,9 +15,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --------------------------------
-# Sidebar – Project Summary
-# --------------------------------
+
 with st.sidebar:
     st.markdown("## 📌 Project Summary")
 
@@ -66,10 +62,6 @@ with st.sidebar:
     st.caption("Built as an ML + NLP project for early warning analysis.")
 
 
-# --------------------------------
-# Header
-# --------------------------------
-
 st.caption(
     "This system monitors conversations and raises an early warning "
     "when emotional escalation is likely in the next turn."
@@ -77,15 +69,10 @@ st.caption(
 
 st.divider()
 
-# --------------------------------
-# File paths
-# --------------------------------
 MODEL_PATH = "model.pkl"
 VECTORIZER_PATH = "vectorizer.pkl"
 
-# --------------------------------
-# Load model
-# --------------------------------
+
 @st.cache_resource(show_spinner=False)
 def load_artifacts():
     if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
@@ -107,9 +94,6 @@ def load_artifacts():
 
 model, vectorizer = load_artifacts()
 
-# --------------------------------
-# Helper functions
-# --------------------------------
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"[^a-z\s]", "", text)
@@ -118,33 +102,40 @@ def clean_text(text):
 
 def estimate_emotion_score(text):
     text = text.lower()
+
     if any(word in text for word in [
-        "furious", "extremely angry", "cannot tolerate", "unbearable", "hate"
+        "furious", "extremely angry", "cannot tolerate",
+        "unbearable", "hate", "lose control"
     ]):
         return 3
+
     elif any(word in text for word in [
         "angry", "frustrated", "frustrating",
-        "irritating", "annoying", "upsetting"
+        "irritating", "annoying", "upsetting",
+        "stressed", "stress", "overwhelmed",
+        "fed up", "tired", "pressure"
     ]):
         return 2
+
     elif any(word in text for word in [
-        "upset", "sad", "disappointed"
+        "upset", "sad", "disappointed", "confused"
     ]):
         return 1
+
     else:
         return 0
 
 
+
 def risk_level(prob, emotion_score):
-    if emotion_score >= 3:
+    if emotion_score >= 3 or prob >= 0.85:
         return "HIGH"
+
     elif emotion_score == 2:
         return "MEDIUM"
-    elif prob >= 0.5:
-        return "MEDIUM"
+
     else:
         return "LOW"
-
 
 def risk_color(level):
     if level == "HIGH":
@@ -154,9 +145,6 @@ def risk_color(level):
     else:
         return "🟢 LOW RISK"
 
-# --------------------------------
-# Input section
-# --------------------------------
 st.markdown("### 💬 Conversation Input")
 st.write("Enter one message per line. The last message is analyzed with context.")
 
@@ -166,9 +154,6 @@ conversation = st.text_area(
     placeholder="Why are you late?\nYou never listen to me.\nI am furious right now."
 )
 
-# --------------------------------
-# Prediction
-# --------------------------------
 if st.button("🚨 Predict Escalation Risk", use_container_width=True):
     lines = [line.strip() for line in conversation.split("\n") if line.strip()]
 
@@ -191,9 +176,6 @@ if st.button("🚨 Predict Escalation Risk", use_container_width=True):
 
         st.divider()
 
-        # --------------------------------
-        # Output section
-        # --------------------------------
         st.markdown("### 📊 Prediction Result")
 
         st.markdown(
